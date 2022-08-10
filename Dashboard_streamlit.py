@@ -1,9 +1,7 @@
 import pandas as pd
 import streamlit as st
 import altair as alt
-from altair import *
-import requests
-import numpy as np
+#import requests
 import pydeck as pdk
 from datetime import date, datetime
 import matplotlib.pyplot as plt
