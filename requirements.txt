@@ -3,4 +3,4 @@ streamlit
 altair
 pydeck
 datetime
-matplotlib.pyplot
+matplotlib
