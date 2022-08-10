@@ -1,0 +1,6 @@
+pandas
+streamlit
+altair
+pydeck
+datetime
+matplotlib.pyplot
