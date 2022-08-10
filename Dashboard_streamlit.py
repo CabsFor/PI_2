@@ -1,7 +1,3 @@
-from operator import index
-from pickle import FALSE
-from sre_parse import State
-from turtle import color, title
 import pandas as pd
 import streamlit as st
 import altair as alt
