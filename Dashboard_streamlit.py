@@ -16,7 +16,7 @@ df = pd.read_csv('COVID-19_Reported_Patient_Impact_and_Hospital_Capacity_by_Stat
 df['date'] = pd.to_datetime(df['date'])
 df34 = pd.read_csv('statelatlong.csv')
 Estados1 = df34.sort_values(by='State')
-#df['state'] = df['state'].replace(Estados1.State.values,Estados1.City.values)
+df['state'] = df['state'].replace(Estados1.State.values,Estados1.City.values)
 df_map1 = pd.read_csv('df_map1.csv',sep='\t')
 # State Latitude Longitude City inpatient_beds_used_covid total_camas_UCI_COVID
 
