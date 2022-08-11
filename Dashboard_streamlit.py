@@ -16,7 +16,7 @@ df = pd.read_csv('COVID-19_Reported_Patient_Impact_and_Hospital_Capacity_by_Stat
 df['date'] = pd.to_datetime(df['date'])
 df34 = pd.read_csv('statelatlong.csv')
 Estados1 = df34.sort_values(by='State')
-df['state'] = df['state'].replace(Estados1.State.values,Estados1.City.values)
+#df['state'] = df['state'].replace(Estados1.State.values,Estados1.City.values)
 df_map1 = pd.read_csv('df_map1.csv',sep='\t')
 # State Latitude Longitude City inpatient_beds_used_covid total_camas_UCI_COVID
 
@@ -209,7 +209,7 @@ if linea == 'Fallecidos/Hospitalizados':
         st.markdown(titulo, unsafe_allow_html=True)
         st.altair_chart(c4, use_container_width=True)
         
-########################### LINEA DE TIEMPO FALLECIDOS###############################
+########################### LINEA DE TIEMPO y BARRAS FALLECIDOS###############################
 elif linea == 'Fallecidos':
     y = 'Muertes'
     if option == 'Todos':
@@ -253,20 +253,42 @@ elif linea == 'Fallecidos':
                 .add_selection(hover)
             )
             return (lines + points + tooltips).interactive()
+    
+    df_muertos = df[["state", "date",'deaths_covid']]
+    df_muertos = df_muertos.loc[(df_muertos['date'] >= start) & (df_muertos['date'] <= end)].sort_values(by='date')
+    df_muertos = df_muertos.groupby(by=['state']).sum('deaths_covid').sort_values(by='deaths_covid',ascending=False).head(10)
+    df_muertos['State'] = df_muertos.index
+
+    cmuertos = alt.Chart(df_muertos,title='Ranking de Estados con mayor No de Fallecidos por COVID-19').mark_bar().encode(
+            alt.X('State:N', axis=alt.Axis(title='Estado'),sort=alt.EncodingSortField(field='deaths_covid', op="sum", order="descending")),
+            alt.Y('deaths_covid:Q',axis=alt.Axis(title='Fallecidos por COVID-19'))
+        )
+
+    textmuertos = cmuertos.mark_text(
+            align='center',
+            baseline='bottom'
+        ).encode(
+            text='deaths_covid:Q'
+        )
+    col10, col11 = st.columns(2)
+
+    with col10:
+        chart = get_chart(df_flitrado)
+        st.altair_chart(chart,use_container_width=True)
+    with col11:
+        st.altair_chart(cmuertos + textmuertos, use_container_width=True)
 
 
-    chart = get_chart(df_flitrado)
-    st.altair_chart(chart,use_container_width=True)
     col3, col4 = st.columns(2)
     df_flitrado.drop(columns=['Pacientes (COVID-19) Hospitalizados'],inplace=True)
     df_flitrado['mes'] = df_flitrado.fecha.dt.month
     with col3:
          if eventos == 'Mayor':
-             titulo = '<p style="font-family:sans-serif; color:black; text-align: center; font-size: 20px;">Fechas con Mayor numero de contagios (Por Mes)</p>'
+             titulo = '<p style="font-family:sans-serif; color:black; text-align: center; font-size: 20px;">Fechas con Mayor numero de Fallecidos (COVID-19) (Por Mes)</p>'
              df_flitrado = df_flitrado.groupby([df_flitrado.fecha.dt.year,'mes']).sum('Muertes').sort_values(by='Muertes',ascending=False).head(5)
 
          else:
-             titulo = '<p style="font-family:sans-serif; color:black; text-align: center; font-size: 20px;">Fechas con Menor numero de contagios (Por Mes)</p>'
+             titulo = '<p style="font-family:sans-serif; color:black; text-align: center; font-size: 20px;">Fechas con Menor numero de Fallecidos (COVID-19) (Por Mes)</p>'
              df_flitrado = df_flitrado.groupby([df_flitrado.fecha.dt.year,'mes']).sum('Muertes').sort_values(by='Muertes',ascending=True).head(5)
 
          st.markdown(titulo, unsafe_allow_html=True)
@@ -333,11 +355,11 @@ else:
     df_flitrado['mes'] = df_flitrado.fecha.dt.month
     with col3:
          if eventos == 'Mayor':
-             titulo = '<p style="font-family:sans-serif; color:black; text-align: center; font-size: 20px;">Fechas con Mayor numero de contagios (Por Mes)</p>'
+             titulo = '<p style="font-family:sans-serif; color:black; text-align: center; font-size: 20px;">Fechas con Mayor numero de Hospitalizaciones (Por Mes)</p>'
              df_flitrado = df_flitrado.groupby([df_flitrado.fecha.dt.year,'mes']).sum('Pacientes (COVID-19) Hospitalizados').sort_values(by='Pacientes (COVID-19) Hospitalizados',ascending=False).head(5)
 
          else:
-             titulo = '<p style="font-family:sans-serif; color:black; text-align: center; font-size: 20px;">Fechas con Menor numero de contagios (Por Mes)</p>'
+             titulo = '<p style="font-family:sans-serif; color:black; text-align: center; font-size: 20px;">Fechas con Menor numero de Hospitalizaciones (Por Mes)</p>'
              df_flitrado = df_flitrado.groupby([df_flitrado.fecha.dt.year,'mes']).sum('Pacientes (COVID-19) Hospitalizados').sort_values(by='Pacientes (COVID-19) Hospitalizados',ascending=True).head(5)
 
          st.markdown(titulo, unsafe_allow_html=True)
@@ -438,7 +460,7 @@ df_a_covid = df_a_covid.groupby(by=['state']).sum().sort_values(by='total_adult_
 df_a_covid['State'] = df_a_covid.index
 if option == 'Todos':
     if paci == 'Pediatricos':
-        c3 = alt.Chart(df_p_covid,title='Ranking de Estados con mayor ocupación hospitalaria por COVID').mark_bar().encode(
+        c3 = alt.Chart(df_p_covid).mark_bar().encode(
                     alt.X('State:N', axis=alt.Axis(title='Estado'),sort=alt.EncodingSortField(field='inpatient_beds_used_covid', op="sum", order="descending")),
                     alt.Y('total_pediatric_patients_hospitalized_confirmed_covid:Q',axis=alt.Axis(title='Ocupacion Hospitalaria(Camas UCI Ocupadas)'))
                 )
@@ -450,7 +472,7 @@ if option == 'Todos':
                     text='total_pediatric_patients_hospitalized_confirmed_covid:Q'
                 )
     else:
-        c3 = alt.Chart(df_a_covid,title='Ranking de Estados con mayor ocupación hospitalaria por COVID').mark_bar().encode(
+        c3 = alt.Chart(df_a_covid).mark_bar().encode(
                     alt.X('State:N', axis=alt.Axis(title='Estado'),sort=alt.EncodingSortField(field='inpatient_beds_used_covid', op="sum", order="descending")),
                     alt.Y('total_adult_patients_hospitalized_confirmed_covid:Q',axis=alt.Axis(title='Ocupacion Hospitalaria(Camas UCI Ocupadas)'))
                 )
@@ -602,4 +624,3 @@ with col6:
     titulo = f"""<p style="font-family:arial; color:black; text-align: center; font-size: 20px;">Relacion Fallecidos / Falta de personal</p>"""""
     st.markdown(titulo, unsafe_allow_html=True)
     st.altair_chart(chart,use_container_width=True)
-
